@@ -2,6 +2,11 @@
 
 ## Installation
 
+### install pybullet
+```bash
+pip install pybullet
+```
+
 ### Clone the Repository
 
 ```bash
@@ -10,6 +15,15 @@ cd collision_check
 git clone https://github.com/ompl/ompl.git
 
 #Visit OMPL GitHub Repository and install dependencies
+
+    Boost (version 1.58 or higher)
+    CMake (version 3.12 or higher)
+    Eigen (version 3.3 or higher)
+    Py++ (needed to generate Python bindings)
+    Doxygen (needed to create a local copy of the documentation at https://ompl.kavrakilab.org/core)
+    Flann (FLANN can be used for nearest neighbor queries by OMPL)
+    Spot (Used for constructing finite automata from LTL formulae.)
+
 
 
 cd ompl
