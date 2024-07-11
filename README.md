@@ -36,7 +36,7 @@ make -j 4 # Replace "4" with the number of cores on your machine
 
 ```bash
 # Export OMPL Python bindings to Python environment
-export PYTHONPATH=/home/hanglok/Desktop/pybullet_ompl/ompl/py-bindings:$PYTHONPATH
+export PYTHONPATH=/home/usr/Desktop/collision_check/ompl/py-bindings:$PYTHONPATH
 ```
 
 
