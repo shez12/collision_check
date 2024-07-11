@@ -14,7 +14,7 @@ git clone https://github.com/shez12/collision_check.git
 cd collision_check
 git clone https://github.com/ompl/ompl.git
 ```
-# Visit OMPL GitHub Repository and install dependencies
+# Visit [OMPL](https://github.com/ompl/ompl) GitHub Repository and install dependencies
 
     Boost (version 1.58 or higher)
     CMake (version 3.12 or higher)
