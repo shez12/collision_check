@@ -22,7 +22,7 @@ from itertools import product
 import copy
 
 INTERPOLATE_NUM = 500
-DEFAULT_PLANNING_TIME = 5.0
+DEFAULT_PLANNING_TIME = 1
 
 class PbOMPLRobot():
     '''
@@ -202,6 +202,13 @@ class PbOMPL():
             self.planner = og.FMT(self.ss.getSpaceInformation())
         elif planner_name == "BITstar":
             self.planner = og.BITstar(self.ss.getSpaceInformation())
+        elif planner_name == "LBTRRT":
+            self.planner = og.LazyRRT(self.ss.getSpaceInformation())
+        elif planner_name ==  "BFMT":
+            self.planner = og.BFMT(self.ss.getSpaceInformation())
+
+        elif planner_name == "SST":
+            self.planner = og.SST(self.ss.getSpaceInformation())
         else:
             print("{} not recognized, please add it first".format(planner_name))
             return

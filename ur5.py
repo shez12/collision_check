@@ -5,6 +5,8 @@ import sys
 import pybullet_data
 import numpy as np
 from pointcloud_util import pointcloud
+import time
+import threading
 
 
 sys.path.insert(0, osp.join(osp.dirname(osp.abspath(__file__)), '../'))
@@ -38,12 +40,17 @@ class UR5Demo():
 
 
         # set planner
-        # possible values: "RRT", "RRTConnect", "RRTstar", "FMT", "PRM" "EST", "BITstar"
-        self.pb_ompl_interface.set_planner("BITstar")
+        # possible values: "RRT", "RRTConnect", "RRTstar", "FMT", "PRM" "EST", "BITstar","BFMT"
+        self.pb_ompl_interface.set_planner("RRTstar")
 
 
         # add obstacles
         self.update_obstacles()
+
+
+        self.path = []
+
+
 
     def clear_obstacles(self):
         for obstacle in self.obstacles:
@@ -84,22 +91,39 @@ class UR5Demo():
 
         self.obstacles.append(box_id)
         self.pb_ompl_interface.set_obstacles(self.obstacles)
-        return box_id        
+        return box_id     
+    
 
-    def run(self,start,goal):
-        '''
-        '''
+    def continue_plan(self,path,goal):
+        self.robot.set_state(path[-1])
+        self.pb_ompl_interface.set_planner("FMT")
+        res, path = self.pb_ompl_interface.plan(goal,allowed_time=4)
+        self.path = path
+
+
+    def run(self, start, goal):
         self.robot.set_state(start)
         res, path = self.pb_ompl_interface.plan(goal)
-        if res:
-            self.pb_ompl_interface.execute(path)
+        self.path = path
+        print(path[-1])
+        thread1 = threading.Thread(target=self.pb_ompl_interface.execute, args=(path,))
+        thread2 = threading.Thread(target=self.continue_plan, args=(path, goal))
+
+        if res and path[-1] != goal:
+            thread1.start()
+            thread2.start()
+
+            thread2.join()
+            thread1.join()
+
+        self.pb_ompl_interface.execute(self.path)
         return res, path
     
 if __name__== '__main__':
     ####  put mesh 
     env = UR5Demo()
-    start = [0,-1.5 ,0   ,-1  ,0   ,0]
-    goal = [0 ,0   ,-0.7,-0.3,-1.1,0.2]
+    start = [0,-2 ,0,-1  ,0   ,0]
+    goal = [0 ,0 ,0 ,0 ,0,-1.2]
 
     # load mesh
     pcd = o3d.io.read_point_cloud("plydoc/bunny.ply")
@@ -107,7 +131,7 @@ if __name__== '__main__':
     mesh = pointcloud_obj.create_mesh() 
     pointcloud_obj.export(mesh, "plydoc/bunny.obj")
     pos = pointcloud_obj.get_pos()
-    env.add_mesh("plydoc/bunny.obj", pos)
+    # env.add_mesh("plydoc/bunny.obj", pos)
     env.add_box([1, 0, 0.7], [0.5, 0.5, 0.05])
     env.run(start,goal)
 
