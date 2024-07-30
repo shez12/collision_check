@@ -22,7 +22,7 @@ from itertools import product
 import copy
 
 INTERPOLATE_NUM = 500
-DEFAULT_PLANNING_TIME = 1
+DEFAULT_PLANNING_TIME = 0.2
 
 class PbOMPLRobot():
     '''
@@ -135,10 +135,10 @@ class PbOMPL():
             bounds.setLow(i, bound[0])
             bounds.setHigh(i, bound[1])
         self.space.setBounds(bounds)
-
+        self.combined_space = ob.CompoundStateSpace()
         self.ss = og.SimpleSetup(self.space)
         self.ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.is_state_valid))
-        self.si = self.ss.getSpaceInformation()
+        # self.si = self.ss.getSpaceInformation()
         # self.si.setStateValidityCheckingResolution(0.005)
         # self.collision_fn = pb_utils.get_collision_fn(self.robot_id, self.robot.joint_idx, self.obstacles, [], True, set(),
         #                                                 custom_limits={}, max_distance=0, allow_collision_links=[])
@@ -175,6 +175,8 @@ class PbOMPL():
                 # print('body collision', body1, body2)
                 # print(get_body_name(body1), get_body_name(body2))
                 return False
+            
+        
         return True
 
     def setup_collision_detection(self, robot, obstacles, self_collisions = True, allow_collision_links = []):
@@ -183,6 +185,7 @@ class PbOMPL():
             [item for item in utils.get_moving_links(robot.id, robot.joint_idx) if not item in allow_collision_links])
         moving_bodies = [(robot.id, moving_links)]
         self.check_body_pairs = list(product(moving_bodies, obstacles))
+
 
     def set_planner(self, planner_name):
         '''
