@@ -7,19 +7,23 @@ import pymeshfix
 import open3d as o3d
 from scipy.spatial.transform import Rotation
 
-# Load the mesh from the .obj file
-infile = "plydoc/mesh4.obj"
-mesh = trimesh.load(infile)
-v,f = mesh.vertices, mesh.faces
+#rpy to quaternion
 
-meshfix = pymeshfix.MeshFix(v, f)
+def rpy2matrix(rpy):
 
-# meshfix.repair()
+    r = Rotation.from_euler('zyx', rpy, degrees=False)
+    return r.as_matrix()
 
-meshfix.plot()
+def matrix2quat(matrix):
+    r = Rotation.from_matrix(matrix)
+    return r.as_quat()
 
+def rpy2quat(rpy):
+    r = Rotation.from_euler('zyx', rpy, degrees=False)
+    return r.as_quat()
 
-
-meshfix.save("plydoc/mesh4_fixed.obj")
-
-
+R = np.array([[0.2972,-0.6661,-0.6855], [-0.9546,-0.2223,-0.1984], [-0.02,0.714,-0.7005]])
+print(R)
+quat = matrix2quat(R)
+print(quat)
+# print(rpy2quat([0,0,-62]))

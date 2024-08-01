@@ -22,7 +22,7 @@ from itertools import product
 import copy
 
 INTERPOLATE_NUM = 500
-DEFAULT_PLANNING_TIME = 0.2
+DEFAULT_PLANNING_TIME = 0.7
 
 class PbOMPLRobot():
     '''
@@ -144,7 +144,7 @@ class PbOMPL():
         #                                                 custom_limits={}, max_distance=0, allow_collision_links=[])
 
         self.set_obstacles(obstacles)
-        self.set_planner("RRT") # RRT by default
+        # self.set_planner("RRT") # RRT by default
 
     def set_obstacles(self, obstacles):
         self.obstacles = obstacles

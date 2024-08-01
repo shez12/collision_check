@@ -2,7 +2,7 @@ import pybullet as p
 import pybullet_data
 import threading
 import numpy as np
-from read_pointcloud2 import *
+# from read_pointcloud2 import *
 
 
 
@@ -37,7 +37,7 @@ class UR5Demo():
 
         # set planner
         # possible values: "RRT", "RRTConnect", "RRTstar", "FMT", "PRM" "EST", "BITstar","BFMT"
-        # self.pb_ompl_interface.set_planner("RRTstar")
+        self.pb_ompl_interface.set_planner("BITstar")
 
 
         # add obstacles
@@ -81,11 +81,11 @@ class UR5Demo():
 
 
 
-    def continue_plan(self,path,goal):
-        self.robot.set_state(path[-1])
-        self.pb_ompl_interface.set_planner("BITstar")
-        res, path = self.pb_ompl_interface.plan(goal,allowed_time=1)
-        self.path = path
+    # def continue_plan(self,path,goal):
+    #     self.robot.set_state(path[-1])
+    #     self.pb_ompl_interface.set_planner("BITstar")
+    #     res, path = self.pb_ompl_interface.plan(goal,allowed_time=1)
+    #     self.path = path
 
 
     def run(self, start, goal):
@@ -93,38 +93,49 @@ class UR5Demo():
         res, path = self.pb_ompl_interface.plan(goal)
         self.path = path
         print(path[-1])
-        thread1 = threading.Thread(target=self.pb_ompl_interface.execute, args=(path,))
-        thread2 = threading.Thread(target=self.continue_plan, args=(path, goal))
+        # thread1 = threading.Thread(target=self.pb_ompl_interface.execute, args=(path,))
+        # thread2 = threading.Thread(target=self.continue_plan, args=(path, goal))
 
-        if res and path[-1] != goal:
-            thread1.start()
-            thread2.start()
+        # if res and path[-1] != goal:
+        #     thread1.start()
+        #     thread2.start()
 
-            thread2.join()
-            thread1.join()
+        #     thread2.join()
+        #     thread1.join()
 
-        self.pb_ompl_interface.execute(self.path)
+        while True:
+            self.pb_ompl_interface.execute(self.path)
+            
         return res, path
     
 
 if __name__== '__main__':
-    # Retrieve the point cloud
-    # pcl = PointCloudListener()
-    # pcl.start_listening()
-    # pcd = pcl.get_pcd()
-    # pcl.visualize_pcd()
-    
-    # ####  put mesh 
-    env = UR5Demo([0.286,0.0274,0.155],[ 0,   -0.92387953 , 0,        0.38268343])
-    
-    
-    # env = UR5Demo([0.286,0.0274,0.155],[ 0,0,0,1])
-    
-
+        # ####  put mesh 
+    env = UR5Demo([-0.554,0.4631,0.313],[ 0.74476215 ,-0.54370992, -0.23668004 , 0.30609054])
+    # env = UR5Demo([-0.344,-0.204,-0.25],[ 0.00195677 ,-0.00862662 , 0.51777229  ,0.85547274])
     offset  = [-np.pi/2,0 ,0, 0  ,0  ,0]
 
     start = [0,-2 ,0,-1  ,0 ,0]
     goal = [0,0 ,0 ,0 ,0,0]
+
+    # Get the base position and orientation of the robot
+    # base_position, base_orientation = p.getBasePositionAndOrientation(env.robotid)
+
+    # # Add debug lines to show the base frame
+    # line_length = 0.5
+    # # X-axis in red
+    # p.addUserDebugLine(base_position, 
+    #                 [base_position[0] + line_length, base_position[1], base_position[2]], 
+    #                 [1, 0, 0], 2)
+    # # Y-axis in green
+    # p.addUserDebugLine(base_position, 
+    #                 [base_position[0], base_position[1] + line_length, base_position[2]], 
+    #                 [0, 1, 0], 2)
+    # # Z-axis in blue
+    # p.addUserDebugLine(base_position, 
+    #                 [base_position[0], base_position[1], base_position[2] + line_length], 
+    #                 [0, 0, 1], 2)
+
 
     #add offset
     start = [start[i] + offset[i] for i in range(6)]
@@ -134,13 +145,14 @@ if __name__== '__main__':
     # load mesh
     # pcd = o3d.io.read_point_cloud("plydoc/bunny.ply")
     # env.add_mesh(pcd,to_bounding_box=True)
-    env.add_mesh("plydoc/mesh4.obj",[0,0,0],[0,0,0,1])
+    env.add_mesh("plydoc/mesh6.obj",[0,0,0],[0,0,0,1])
 
 
 
     # env.add_box([1, 0, 0.7], [0.5, 0.5, 0.05])
-    env.run(start,goal)
     input("Press Enter to continue...")
+    env.run(start,goal)
+    
 
 
 

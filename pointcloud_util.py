@@ -2,6 +2,8 @@ import open3d as o3d
 import numpy as np
 import pymeshfix
 from scipy.spatial import ConvexHull
+import trimesh
+
 
 
 class pointcloud:
@@ -80,8 +82,21 @@ class pointcloud:
     def export(self, mesh, filename):
        # save as .obj file
         o3d.io.write_triangle_mesh(filename, mesh)
-        return filename
-        
+
+if __name__ == "__main__":
+    mesh = trimesh.load('plydoc/mesh9.ply')
+
+    print("Original Vertices:")
+    print(mesh.vertices)
+    original_faces_count = len(mesh.faces)
+    target_faces_count = int(original_faces_count * 0.5)
+    simplified_mesh = mesh.simplify_quadric_decimation(target_faces_count)
+
+    # Export the cleaned mesh to an OBJ file
+    simplified_mesh.export('plydoc/mesh9.obj')
+    newmesh = trimesh.load('plydoc/mesh9.obj')
+    print(newmesh.vertices)
+    
 
 
 
