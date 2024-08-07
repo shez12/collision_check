@@ -7,23 +7,8 @@ import pb_ompl2
 import numpy as np
 from pointcloud_util import pointcloud
 
-# sys.path.insert(0, osp.join(osp.dirname(osp.abspath(__file__)), '../'))
 
 
-
-
-'''
-
-IMU: world frame
-slam target frame: 
-robot1 frame: based on slam target frame
-robot2 frame: based on slam target frame
-camer1 frame: based on slam target frame
-camer2 frame: based on slam target frame
-
-additional obstalces: based on camera frame--> convert to world frame
-
-'''
 
 
 class UR5DualEnv():
@@ -37,8 +22,7 @@ class UR5DualEnv():
         
         '''
 
-        self.unfixed_obstacles = [] # will move
-        self.fixed_obstacles = []   # will not move
+        self.obstacles = [] 
 
         p.connect(p.GUI)
         # p.connect(p.DIRECT)
@@ -67,7 +51,7 @@ class UR5DualEnv():
 
 
         # setup pb_ompl
-        self.pb_ompl_interface = pb_ompl2.PbOMPL2(self.robot1,self.robot2, self.unfixed_obstacles,self.fixed_obstacles)
+        self.pb_ompl_interface = pb_ompl2.PbOMPL2(self.robot1,self.robot2, self.obstacles)
 
 
         ## set planner/ if not set, it will use the default planner
@@ -81,11 +65,8 @@ class UR5DualEnv():
 
     def clear_obstacles(self):
         
-        for obstacle in self.unfixed_obstacles:
+        for obstacle in self.obstacles:
             p.removeBody(obstacle)
-            
-        self.unfixed_obstacles = []
-        self.update_obstacles()
 
 
     def update_obstacles(self):
@@ -93,47 +74,17 @@ class UR5DualEnv():
         update the obstacles in the environment
 
         '''
-        self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
-
-
-    # def add_mesh(self, pcd,to_bounding_box=False):
-    #     '''
-    #     import mesh as pybullet collision shape
-    #     create a collision shape from the mesh
-
-
-    #     args:
-    #         mesh: o3d.geometry; example: o3d.io.read_point_cloud(path)
-    #         to_bounding_box: bool, if True, convert the mesh to bounding bo
-
-    #     '''
-
-    #     pointcloud_obj = pointcloud(pcd)
-    #     mesh = pointcloud_obj.create_mesh() 
-    #     meshFile= pointcloud_obj.export(mesh, "plydoc/model_{time.strftime(\"%m%d-%H%M\")}.obj")
-    #     pos = pointcloud_obj.get_pos()
-    #     # orientation = pointcloud_obj.get_orientation()
-    #     orientation = [0,0,0,1]
-
-    #     if to_bounding_box==False:
-    #         meshId = p.createCollisionShape(p.GEOM_MESH,fileName=meshFile, meshScale=[1,1,1])
-    #         # create a multi body with the collision shape
-    #         mesh_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=meshId, basePosition=pos, baseOrientation=orientation)    
-    #         self.unfixed_obstacles.append(mesh_body)
-    #         self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
-    #     else:
-    #         mesh = pointcloud_obj.get_mesh()
-    #         min_x, min_y, min_z, max_x, max_y, max_z = pointcloud_obj.to_bounding_box(mesh)
-    #         collision_box_id = p.createCollisionShape(p.GEOM_BOX,
-    #                                        halfExtents=[(max_x - min_x) / 2,
-    #                                              (max_y - min_y) / 2,
-    #                                              (max_z - min_z) / 2],
-    #                                       meshScale=[1, 1, 1])
-    #         coll_box = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=collision_box_id, basePosition=pos, baseOrientation=orientation)
-    #         self.unfixed_obstacles.append(coll_box)
-    #         self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
+        self.pb_ompl_interface.set_obstacles(self.obstacles)
 
     def add_mesh(self,file_path,posi,ori):
+        '''
+        Add a mesh(.obj) to the environment
+        args:
+            file_path: str, path to the mesh file
+            posi: list of 3 floats, position of the mesh
+            ori: list of 4 floats, orientation of the mesh(quaternion xyzw)
+        '''
+
         meshId = p.createCollisionShape(p.GEOM_MESH,fileName=file_path, meshScale=[1,1,1],flags=p.GEOM_FORCE_CONCAVE_TRIMESH)
         # create a multi body with the collision shape
         mesh_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=meshId, basePosition=posi, baseOrientation= ori )    
@@ -154,8 +105,8 @@ class UR5DualEnv():
         colBoxId = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_box_size)
         box_id = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=colBoxId, basePosition=box_pos)
 
-        self.unfixed_obstacles.append(box_id)
-        self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
+        self.obstacles.append(box_id)
+        self.pb_ompl_interface.set_obstacles(self.obstacles)
         return box_id     
     
 
@@ -166,9 +117,6 @@ class UR5DualEnv():
         '''
         self.robot1.set_state(start1)
         self.robot2.set_state(start2)
-        # print("robot1 state:", env.robot1.get_cur_state())
-        # print("robot2 state:",env.robot2.get_cur_state())
-
         res, path1,path2 = self.pb_ompl_interface.plan(goal1,goal2)
         # execute the planned path
         self.pb_ompl_interface.execute(path1,path2)
@@ -176,25 +124,9 @@ class UR5DualEnv():
 
     
 if __name__== '__main__':
-
-    matrix = np.array([
-    [-0.9966,    0.05556,   0.06165,   0.6978],
-    [-0.05208,  -0.997,     0.05659,  -0.4639],
-    [ 0.06462,   0.05319,   0.9965,    0.5333],
-    [ 0,         0,         0,         1]
-])
-    R = matrix[:3,:3]
-    t = matrix[:3,3]
-
-    quat = td.quaternions.mat2quat(R)
-
     
     arm_1_position = [0.3,0,1]
     arm_1_orientation = p.getQuaternionFromEuler([0, 1.57, 0])  # Rotate to face the box
-    # arm_1_position = t
-    # arm_1_orientation = quat
-
-
 
     # Right side
     arm_2_position = [-0.3,0,1]
@@ -242,12 +174,6 @@ if __name__== '__main__':
     
 
     env.run(start,goal1,start2,goal2)
-
-    input("Press Enter to continue...")
-
-    print("obstacles not cleared",env.unfixed_obstacles)
-    env.clear_obstacles()
-    print("obstacles cleared",env.unfixed_obstacles)
 
     input("Press Enter to continue...")
 

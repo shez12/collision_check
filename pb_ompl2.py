@@ -1,20 +1,6 @@
-try:
-
-    from ompl import util as ou
-    from ompl import base as ob
-    from ompl import geometric as og
-except ImportError:
-    # if the ompl module is not in the PYTHONPATH assume it is installed in a
-    # subdirectory of the parent directory called "py-bindings."
-    from os.path import abspath, dirname, join
-    import sys
-    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'ompl/py-bindings'))
-    # sys.path.insert(0, join(dirname(abspath(__file__)), '../whole-body-motion-planning/src/ompl/py-bindings'))
-    
-    print(sys.path)
-    from ompl import util as ou
-    from ompl import base as ob
-    from ompl import geometric as og
+from ompl import util as ou
+from ompl import base as ob
+from ompl import geometric as og
 import pybullet as p
 import utils
 import time
@@ -131,16 +117,28 @@ class PbStateSpace(ob.RealVectorStateSpace):
 
 
 class PbOMPL2():
-    def __init__(self, robot1, robot2, obstacles=None,fixed_obstacles=None):
+    def __init__(self, robot1, robot2, obstacles=None):
+        '''
+        args:
+            robot1: PbOMPLRobot, robot1
+            robot2: PbOMPLRobot, robot2
+            obstacles: list, list of obstacles
+        '''
+
         self.robot1 = robot1
         self.robot2 = robot2
         self.obstacles = obstacles if obstacles is not None else []
-        self.fixed_obstacles = fixed_obstacles if fixed_obstacles is not None else []
 
         # Setup state spaces and planners for both robots
         self.setup_spaces_and_planners()
 
     def setup_spaces_and_planners(self):
+        '''
+        
+        
+        '''
+
+
         # Initialize combined state space for both robots
         self.space1 = PbStateSpace(self.robot1.num_dim)
         self.space2 = PbStateSpace(self.robot2.num_dim)
@@ -169,15 +167,13 @@ class PbOMPL2():
         self.ss = og.SimpleSetup(self.combined_space)
         self.ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.is_state_valid))
 
-        # # Set up collision detection for both robots and obstacles
-        # self.setup_collision_detection()
 
-        # Set default planner (e.g., RRT)
-        # self.set_planner("RRT")
-
-    def set_obstacles(self,fix_obstacles=[], move_obstacles=[]):
-        self.obstacles = fix_obstacles+move_obstacles
-
+    def set_obstacles(self,obstacles):
+        '''
+        Set overall obstacles for the environment
+    
+        '''
+        self.obstacles = obstacles
         # update collision detection
         self.setup_collision_detection()
 
@@ -188,6 +184,12 @@ class PbOMPL2():
         self.obstacles.remove(obstacle_id)
 
     def is_state_valid(self, state):
+        '''
+        Check if the given state is valid:
+            1. Check self-collision for both robots
+            2. Check collision with obstacles for both robots
+            3. Check collision between robot1 and robot2
+        '''
 
         state1 = [state[0][i] for i in range(self.robot1.num_dim)]
         state2 = [state[1][i] for i in range(self.robot1.num_dim)]
@@ -225,6 +227,14 @@ class PbOMPL2():
         return True
 
     def setup_collision_detection(self, self_collisions=True, allow_collision_links=[]):
+        '''
+        Setup collision detection(check_body_pairs) for the environment
+            1. check self-collision for both robots
+            2. check collision with obstacles for both robots
+            3. check collision between robot1 and robot2
+
+        
+        '''
         self.check_link_pairs1 = utils.get_self_link_pairs(self.robot1.id, self.robot1.joint_idx)
         self.check_link_pairs2 = utils.get_self_link_pairs(self.robot2.id, self.robot2.joint_idx)
         
@@ -239,6 +249,12 @@ class PbOMPL2():
         self.check_body_pairs3 = list(product(moving_bodies1, moving_bodies2))
 
     def set_planner(self, planner_name):
+        '''
+        set planner for the combined space
+        
+        '''
+
+
         if planner_name == "PRM":
             self.planner = og.PRM(self.ss.getSpaceInformation())
         elif planner_name == "RRT":
@@ -315,7 +331,6 @@ class PbOMPL2():
             sol_path_geometric = self.ss.getSolutionPath()
             sol_path_geometric.interpolate(INTERPOLATE_NUM)
             sol_path_states = sol_path_geometric.getStates()
-            # print("oh............",sol_path_states[0][0],sol_path_states[1])
             sol_path_list1 = [self.state_to_list(state[0]) for state in sol_path_states]
             sol_path_list2 = [self.state_to_list(state[1]) for state in sol_path_states]
             res = True
@@ -332,11 +347,7 @@ class PbOMPL2():
         '''
         start1 = self.robot1.get_cur_state()
         start2 = self.robot2.get_cur_state()
-        # print("start1:",start1)
-        # print("start2:",start2)
-        # print("goal1:",goal1)
-        # print("goal2:",goal2)
-
+    
         return self.plan_start_goal(start1,goal1,start2,goal2,allowed_time)
 
 
@@ -346,9 +357,6 @@ class PbOMPL2():
         Args:
             path: list[state], a list of state
         '''
-        # print("final path1:",path1[-1])
-        # print("final path2:",path2[-1])
-
         def control_robot(robot,joint_positions):
             for _ in range(1):
                 # Move joints to desired positions
@@ -356,16 +364,12 @@ class PbOMPL2():
                 p.stepSimulation()
                 time.sleep(1./240.)
         for num in range(len(path1)):
-
-            # if num%3 == 0:
-            #     input("Press Enter to continues...")
             # Create threads for each robot simulation
             thread1 = threading.Thread(target=control_robot,args=(self.robot1,path1[num]))
             thread2 = threading.Thread(target=control_robot,args=(self.robot2,path2[num]))
             # Start both threads
             thread1.start()
             thread2.start()
-            # Wait for threads to complete (optional)
             thread1.join()
             thread2.join()
             
