@@ -175,8 +175,8 @@ class PbOMPL2():
         # Set default planner (e.g., RRT)
         # self.set_planner("RRT")
 
-    def set_obstacles(self, obstacles):
-        self.obstacles = obstacles+self.fixed_obstacles
+    def set_obstacles(self,fix_obstacles=[], move_obstacles=[]):
+        self.obstacles = fix_obstacles+move_obstacles
 
         # update collision detection
         self.setup_collision_detection()

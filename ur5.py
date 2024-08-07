@@ -1,12 +1,14 @@
+'''
+export PYTHONPATH=$PYTHONPATH:/home/rmqlife/work/collision_check/ompl/py-bindings
+
+'''
+
 import pybullet as p
 import pybullet_data
 import threading
 import numpy as np
-# from read_pointcloud2 import *
-
-
-
 import pb_ompl
+from move_ur5 import *
 
 
 class UR5Demo():
@@ -103,55 +105,38 @@ class UR5Demo():
         #     thread2.join()
         #     thread1.join()
 
-        while True:
-            self.pb_ompl_interface.execute(self.path)
+        # while True:
+        self.pb_ompl_interface.execute(self.path)
             
         return res, path
-    
+
 
 if __name__== '__main__':
         # ####  put mesh 
-    env = UR5Demo([-0.554,0.4631,0.313],[ 0.74476215 ,-0.54370992, -0.23668004 , 0.30609054])
-    # env = UR5Demo([-0.344,-0.204,-0.25],[ 0.00195677 ,-0.00862662 , 0.51777229  ,0.85547274])
-    offset  = [-np.pi/2,0 ,0, 0  ,0  ,0]
+    ur5_move = myur5()
+    # env = UR5Demo([-0.554,0.4631,0.313],[ 0.74476215 ,-0.54370992, -0.23668004 , 0.30609054])
+    env = UR5Demo([-0.2445,-0.6305,0.1093],[ 0.71562555 ,0.54186322 ,0.248717 , 0.36387385])
 
-    start = [0,-2 ,0,-1  ,0 ,0]
-    goal = [0,0 ,0 ,0 ,0,0]
+    # offset  = [-np.pi/2,0 ,0, 0  ,0  ,0]
+    start  = ur5_move.get_current_joint()
 
-    # Get the base position and orientation of the robot
-    # base_position, base_orientation = p.getBasePositionAndOrientation(env.robotid)
+    goal_point = [0.1,-0.15,-0.2]
+    goal = p.calculateInverseKinematics(env.robot.id, 6, goal_point)
 
-    # # Add debug lines to show the base frame
-    # line_length = 0.5
-    # # X-axis in red
-    # p.addUserDebugLine(base_position, 
-    #                 [base_position[0] + line_length, base_position[1], base_position[2]], 
-    #                 [1, 0, 0], 2)
-    # # Y-axis in green
-    # p.addUserDebugLine(base_position, 
-    #                 [base_position[0], base_position[1] + line_length, base_position[2]], 
-    #                 [0, 1, 0], 2)
-    # # Z-axis in blue
-    # p.addUserDebugLine(base_position, 
-    #                 [base_position[0], base_position[1], base_position[2] + line_length], 
-    #                 [0, 0, 1], 2)
+    # end_point = [-0.3,-0.1,-0.2]
+    # goal = p.calculateInverseKinematics(env.robot.id, 6, end_point)
 
-
-    #add offset
-    start = [start[i] + offset[i] for i in range(6)]
-    goal = [goal[i] + offset[i] for i in range(6)]
-
+    env.robot.set_state(start)
   
     # load mesh
     # pcd = o3d.io.read_point_cloud("plydoc/bunny.ply")
     # env.add_mesh(pcd,to_bounding_box=True)
-    env.add_mesh("plydoc/mesh6.obj",[0,0,0],[0,0,0,1])
-
-
-
+    env.add_mesh("plydoc/mesh12.obj",[0,0,0],[0,0,0,1])
     # env.add_box([1, 0, 0.7], [0.5, 0.5, 0.05])
+
+    res,pth = env.run(start,goal)
     input("Press Enter to continue...")
-    env.run(start,goal)
+    ur5_move.move_(pth)
     
 
 

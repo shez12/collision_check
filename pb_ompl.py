@@ -1,20 +1,9 @@
-try:
+import sys
 
-    from ompl import util as ou
-    from ompl import base as ob
-    from ompl import geometric as og
-except ImportError:
-    # if the ompl module is not in the PYTHONPATH assume it is installed in a
-    # subdirectory of the parent directory called "py-bindings."
-    from os.path import abspath, dirname, join
-    import sys
-    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'ompl/py-bindings'))
-    # sys.path.insert(0, join(dirname(abspath(__file__)), '../whole-body-motion-planning/src/ompl/py-bindings'))
-    
-    print(sys.path)
-    from ompl import util as ou
-    from ompl import base as ob
-    from ompl import geometric as og
+print(sys.path)
+from ompl import util as ou
+from ompl import base as ob
+from ompl import geometric as og
 import pybullet as p
 import utils
 import time
@@ -22,7 +11,7 @@ from itertools import product
 import copy
 
 INTERPOLATE_NUM = 500
-DEFAULT_PLANNING_TIME = 0.7
+DEFAULT_PLANNING_TIME = 3
 
 class PbOMPLRobot():
     '''
@@ -254,7 +243,7 @@ class PbOMPL():
             res = True
         else:
             print("No solution found")
-
+        self.ss.simplifySolution(0)
         # reset robot state
         self.robot.set_state(orig_robot_state)
         return res, sol_path_list

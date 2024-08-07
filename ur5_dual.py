@@ -46,8 +46,6 @@ class UR5DualEnv():
         p.setTimeStep(1./240.)
         
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        plane = p.loadURDF("plane.urdf")
-        self.fixed_obstacles.append(plane)
 
         # load robot
         urdf_path = "ur5e/ur5e.urdf"
@@ -98,44 +96,52 @@ class UR5DualEnv():
         self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
 
 
-    def add_mesh(self, pcd,to_bounding_box=False):
-        '''
-        import mesh as pybullet collision shape
-        create a collision shape from the mesh
+    # def add_mesh(self, pcd,to_bounding_box=False):
+    #     '''
+    #     import mesh as pybullet collision shape
+    #     create a collision shape from the mesh
 
 
-        args:
-            mesh: o3d.geometry; example: o3d.io.read_point_cloud(path)
-            to_bounding_box: bool, if True, convert the mesh to bounding bo
+    #     args:
+    #         mesh: o3d.geometry; example: o3d.io.read_point_cloud(path)
+    #         to_bounding_box: bool, if True, convert the mesh to bounding bo
 
-        '''
+    #     '''
 
-        pointcloud_obj = pointcloud(pcd)
-        mesh = pointcloud_obj.create_mesh() 
-        meshFile= pointcloud_obj.export(mesh, "plydoc/model_{time.strftime(\"%m%d-%H%M\")}.obj")
-        pos = pointcloud_obj.get_pos()
-        # orientation = pointcloud_obj.get_orientation()
-        orientation = [0,0,0,1]
+    #     pointcloud_obj = pointcloud(pcd)
+    #     mesh = pointcloud_obj.create_mesh() 
+    #     meshFile= pointcloud_obj.export(mesh, "plydoc/model_{time.strftime(\"%m%d-%H%M\")}.obj")
+    #     pos = pointcloud_obj.get_pos()
+    #     # orientation = pointcloud_obj.get_orientation()
+    #     orientation = [0,0,0,1]
 
-        if to_bounding_box==False:
-            meshId = p.createCollisionShape(p.GEOM_MESH,fileName=meshFile, meshScale=[1,1,1])
-            # create a multi body with the collision shape
-            mesh_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=meshId, basePosition=pos, baseOrientation=orientation)    
-            self.unfixed_obstacles.append(mesh_body)
-            self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
-        else:
-            mesh = pointcloud_obj.get_mesh()
-            min_x, min_y, min_z, max_x, max_y, max_z = pointcloud_obj.to_bounding_box(mesh)
-            collision_box_id = p.createCollisionShape(p.GEOM_BOX,
-                                           halfExtents=[(max_x - min_x) / 2,
-                                                 (max_y - min_y) / 2,
-                                                 (max_z - min_z) / 2],
-                                          meshScale=[1, 1, 1])
-            coll_box = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=collision_box_id, basePosition=pos, baseOrientation=orientation)
-            self.unfixed_obstacles.append(coll_box)
-            self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
+    #     if to_bounding_box==False:
+    #         meshId = p.createCollisionShape(p.GEOM_MESH,fileName=meshFile, meshScale=[1,1,1])
+    #         # create a multi body with the collision shape
+    #         mesh_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=meshId, basePosition=pos, baseOrientation=orientation)    
+    #         self.unfixed_obstacles.append(mesh_body)
+    #         self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
+    #     else:
+    #         mesh = pointcloud_obj.get_mesh()
+    #         min_x, min_y, min_z, max_x, max_y, max_z = pointcloud_obj.to_bounding_box(mesh)
+    #         collision_box_id = p.createCollisionShape(p.GEOM_BOX,
+    #                                        halfExtents=[(max_x - min_x) / 2,
+    #                                              (max_y - min_y) / 2,
+    #                                              (max_z - min_z) / 2],
+    #                                       meshScale=[1, 1, 1])
+    #         coll_box = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=collision_box_id, basePosition=pos, baseOrientation=orientation)
+    #         self.unfixed_obstacles.append(coll_box)
+    #         self.pb_ompl_interface.set_obstacles(self.unfixed_obstacles)
 
-            
+    def add_mesh(self,file_path,posi,ori):
+        meshId = p.createCollisionShape(p.GEOM_MESH,fileName=file_path, meshScale=[1,1,1],flags=p.GEOM_FORCE_CONCAVE_TRIMESH)
+        # create a multi body with the collision shape
+        mesh_body = p.createMultiBody(baseMass=0, baseCollisionShapeIndex=meshId, basePosition=posi, baseOrientation= ori )    
+        self.obstacles.append(mesh_body)
+        self.pb_ompl_interface.set_obstacles(self.obstacles)
+        return mesh_body
+
+
     
     def add_box(self, box_pos, half_box_size):
         '''
@@ -198,10 +204,10 @@ if __name__== '__main__':
 
     robot1 = env.robot1
     robot2 = env.robot2
-    path = "mesh/screen.ply"
-    point_cloud = o3d.io.read_point_cloud(path)
-    env.add_mesh(point_cloud, to_bounding_box=False)
 
+
+
+    env.add_mesh("plydoc/mesh6.obj",[0,0,0],[0,0,0,1])
 
 
     start = [0 ,-1.57,0,0 ,0,1]
