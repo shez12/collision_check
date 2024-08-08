@@ -2,6 +2,15 @@ from myRobot import MyRobot
 import numpy as np
 import rospy
 
+
+'''
+
+Given a path, move the robot to the path
+
+'''
+
+
+
 class myur5(MyRobot):
     def __init__(self):
         rospy.init_node('ur5_collision', anonymous=True)
@@ -30,6 +39,11 @@ class myur5(MyRobot):
                 # if step%100 ==0:
                 #     input("press enter to continue")
                 
+# multi robot
+
+
+
+
 if __name__ == "__main__":
     myur5 = MyRobot()
     myur5.__init__()

@@ -1,5 +1,5 @@
 '''
-export PYTHONPATH=$PYTHONPATH:/home/rmqlife/work/collision_check/ompl/py-bindings
+export PYTHONPATH=/home/hanglok/Desktop/collision_check/ompl/py-bindings:$PYTHONPATHs
 
 '''
 
@@ -10,13 +10,13 @@ import pb_ompl
 from move_ur5 import *
 
 
-class UR5Demo():
-    def __init__(self,posi,ori) -> None:
+class UR5Planner():
+    def __init__(self,position,orientation) -> None:
         '''
         Initialize the environment
         args:
-            posi: list of 3 floats, position of the robot
-            ori: list of 4 floats, orientation of the robot(quaternion xyzw)
+            position: list of 3 floats, position of the robot
+            orientation: list of 4 floats, orientation of the robot(quaternion xyzw)
         '''
         self.obstacles = []
         
@@ -26,7 +26,7 @@ class UR5Demo():
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         # load robot
         urdf_path = "ur5e/ur5e.urdf"
-        robot_id = p.loadURDF(urdf_path,basePosition=posi, baseOrientation= ori, useFixedBase = 1)
+        robot_id = p.loadURDF(urdf_path,basePosition=position, baseOrientation= orientation, useFixedBase = 1)
         self.robotid = robot_id
         robot = pb_ompl.PbOMPLRobot(robot_id)
         self.robot = robot
@@ -37,9 +37,6 @@ class UR5Demo():
         # set planner
         # possible values: "RRT", "RRTConnect", "RRTstar", "FMT", "PRM" "EST", "BITstar","BFMT"
         self.pb_ompl_interface.set_planner("BITstar")
-
-        # add obstacles
-        self.update_obstacles()
 
 
     def clear_obstacles(self):
@@ -106,8 +103,6 @@ class UR5Demo():
             path: list of list of floats, path found by the planner
         
         '''
-
-
         self.robot.set_state(start)
         res, path = self.pb_ompl_interface.plan(goal)
         self.path = path
@@ -118,10 +113,8 @@ class UR5Demo():
 
 if __name__== '__main__':
     ##### EXAMPLE 1#####
-
-
     ur5_move = myur5()
-    env = UR5Demo([-0.2445,-0.6305,0.1093],[ 0.71562555 ,0.54186322 ,0.248717 , 0.36387385])
+    env = UR5Planner([-0.2445,-0.6305,0.1093],[ 0.71562555 ,0.54186322 ,0.248717 , 0.36387385])
     start  = ur5_move.get_current_joint()
 
     goal_point = [0.1,-0.15,-0.2]
@@ -131,7 +124,7 @@ if __name__== '__main__':
     # goal = p.calculateInverseKinematics(env.robot.id, 6, end_point)
 
     env.robot.set_state(start)
-    env.add_mesh("plydoc/mesh12.obj",[0,0,0],[0,0,0,1])
+    env.add_mesh("plydoc/1.obj",[0,0,0],[0,0,0,1])
     res,path = env.run(start,goal)
     input("Press Enter to continue...")
     ur5_move.move_(path)

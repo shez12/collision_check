@@ -30,7 +30,6 @@ class PbOMPLRobot():
         joint_idx = [j for j in all_joint_idx if self._is_not_fixed(j)]
         self.num_dim = len(joint_idx)
         self.joint_idx = joint_idx
-        print("!!! self.joint idx: ", self.joint_idx)
         self.joint_bounds = []
 
         self.reset()
@@ -55,14 +54,14 @@ class PbOMPLRobot():
 
     def get_cur_state(self):
         '''
-        
+        Get current robot state.
         '''
         p_state = p.getJointStates(self.id, self.joint_idx)
         cur_state = []
         for i in range(self.num_dim):
             cur_state.append(p_state[i][0])
 
-        print("cur_state:",cur_state)
+        # print("cur_state:",cur_state)
         return cur_state
     def set_state(self, state):
         '''
@@ -87,8 +86,10 @@ class PbOMPLRobot():
         self.state = state
 
     def _set_joint_positions(self, joints, positions):
-        # for joint, value in zip(joints, positions):
-        #     p.resetJointState(self.id, joint, value, targetVelocity=0
+        '''
+        Set robot joint positions
+        
+        '''
         for i in range(len(joints)):
             p.resetJointState(self.id, joints[i], positions[i], targetVelocity=0)
 
@@ -134,11 +135,9 @@ class PbOMPL2():
 
     def setup_spaces_and_planners(self):
         '''
-        
+        Setup state spaces and planners for both robots
         
         '''
-
-
         # Initialize combined state space for both robots
         self.space1 = PbStateSpace(self.robot1.num_dim)
         self.space2 = PbStateSpace(self.robot2.num_dim)
@@ -321,13 +320,14 @@ class PbOMPL2():
 
         # Attempt to solve the problem within allowed planning time
         solved = self.ss.solve(allowed_time)
-        self.ss.simplifySolution(0)
+        
 
         res = False
         sol_path_list1 = []
         sol_path_list2 = []
         if solved:
             print("Found solution: interpolating into {} segments".format(INTERPOLATE_NUM))
+            self.ss.simplifySolution()
             sol_path_geometric = self.ss.getSolutionPath()
             sol_path_geometric.interpolate(INTERPOLATE_NUM)
             sol_path_states = sol_path_geometric.getStates()

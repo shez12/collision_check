@@ -1,6 +1,6 @@
 import numpy as np
 import rospy
-from ur5_dual import UR5DualEnv
+from ur5_dual import UR5DualPlanner
 
 
 '''

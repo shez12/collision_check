@@ -1,6 +1,3 @@
-import sys
-
-print(sys.path)
 from ompl import util as ou
 from ompl import base as ob
 from ompl import geometric as og
@@ -232,6 +229,7 @@ class PbOMPL():
         if solved:
             print("Found solution: interpolating into {} segments".format(INTERPOLATE_NUM))
             # print the path to screen
+            self.ss.simplifySolution()
             sol_path_geometric = self.ss.getSolutionPath()
             sol_path_geometric.interpolate(INTERPOLATE_NUM)
             sol_path_states = sol_path_geometric.getStates()

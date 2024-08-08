@@ -1,24 +1,20 @@
-import os.path as osp
 import pybullet as p
-import open3d as o3d
-import transforms3d as td
 import pybullet_data
 import pb_ompl2
-import numpy as np
-from pointcloud_util import pointcloud
 
 
 
 
 
-class UR5DualEnv():
-    def __init__(self,pos1,pos2,arm_1_orientation,arm_2_orientation) -> None:
+
+class UR5DualPlanner():
+    def __init__(self,arm1_position,arm2_position,arm_1_orientation,arm_2_orientation):
         '''
         args:
-            pos1: list, [x,y,z]
-            pos2: list, [x,y,z]
-            arm_1_orientation: p.getQuaternionFromEuler([r,p,y])
-            arm_2_orientation: p.getQuaternionFromEuler([r,p,y])
+            arm1_position: list, [x,y,z]
+            arm2_position: list, [x,y,z]
+            arm_1_orientation: [x,y,z,w])
+            arm_2_orientation: [x,y,z,w])
         
         '''
 
@@ -26,7 +22,7 @@ class UR5DualEnv():
 
         p.connect(p.GUI)
         # p.connect(p.DIRECT)
-        p.setGravity(0, 0, -9.8)
+        # p.setGravity(0, 0, -9.8)
         p.setTimeStep(1./240.)
         
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -46,8 +42,8 @@ class UR5DualEnv():
         self.robot2 = robot2
 
         # reset robot position and orientation
-        p.resetBasePositionAndOrientation(robot_1, pos1, arm_1_orientation)
-        p.resetBasePositionAndOrientation(robot_2, pos2, arm_2_orientation)
+        p.resetBasePositionAndOrientation(robot_1, arm1_position, arm_1_orientation)
+        p.resetBasePositionAndOrientation(robot_2, arm2_position, arm_2_orientation)
 
 
         # setup pb_ompl
@@ -120,11 +116,10 @@ class UR5DualEnv():
         res, path1,path2 = self.pb_ompl_interface.plan(goal1,goal2)
         # execute the planned path
         self.pb_ompl_interface.execute(path1,path2)
-
-
+        
     
 if __name__== '__main__':
-    
+    # left side
     arm_1_position = [0.3,0,1]
     arm_1_orientation = p.getQuaternionFromEuler([0, 1.57, 0])  # Rotate to face the box
 
@@ -132,14 +127,14 @@ if __name__== '__main__':
     arm_2_position = [-0.3,0,1]
     arm_2_orientation = p.getQuaternionFromEuler([0, -1.57, 0])  # Rotate to face the box
 
-    env = UR5DualEnv(arm_1_position,arm_2_position,arm_1_orientation,arm_2_orientation)  
+    env = UR5DualPlanner(arm_1_position,arm_2_position,arm_1_orientation,arm_2_orientation)  
 
     robot1 = env.robot1
     robot2 = env.robot2
 
 
 
-    env.add_mesh("plydoc/mesh6.obj",[0,0,0],[0,0,0,1])
+    env.add_mesh("plydoc/1.obj",[0,0,0],[0,0,0,1])
 
 
     start = [0 ,-1.57,0,0 ,0,1]
@@ -180,3 +175,4 @@ if __name__== '__main__':
 
 
 
+# 

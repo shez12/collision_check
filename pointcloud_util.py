@@ -1,4 +1,6 @@
 import trimesh
+import open3d as o3d
+import pymeshlab
 
 def ply2obj(file_path):
     '''
@@ -24,12 +26,30 @@ def ply2obj(file_path):
     return export_path
 
 
-if __name__ == "__main__":
-    mesh_path = 'plydoc/mesh9.ply'
-    ply2obj(mesh_path)
+def pcd2ply(file_path):
+    '''
+    Convert a pcd file to a ply file
+    args:
+        file_path: str, path to the pcd file
+    return:
+        export_path: str, path to the ply file
+    '''
+    pcd = o3d.io.read_point_cloud(file_path)
+    export_path = file_path.replace('.pcd', '.ply')
 
+    o3d.io.write_point_cloud(export_path, pcd)
+    return export_path
 
     
+
+if __name__ == "__main__":
+    # mesh_path = 'plydoc/1.pcd'
+    # export_path = pcd2ply(mesh_path)
+    # ply2obj(export_path)
+    ms = pymeshlab.MeshSet()
+    ms.load_new_mesh('plydoc/1.ply')
+    ms.create_noisy_isosurface(resolution=128)
+    ms.save_current_mesh('plydoc/1.obj')
 
 
 
